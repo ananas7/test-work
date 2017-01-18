@@ -7,7 +7,9 @@
   "license": "MIT",
   "scripts": {
     "dev": "webpack -d --watch",
-    "build": "webpack -p"
+    "build": "webpack -p",
+    "migrateUp": "node_modules/db-migrate/bin/db-migrate up 20170118165201-test",
+    "migrateDown": "node_modules/db-migrate/bin/db-migrate down 20170118165201-test"
   },
   "dependencies": {
     "babel-core": "^6.21.0",
@@ -18,6 +20,8 @@
     "bootstrap": "^3.3.7",
     "co": "^4.6.0",
     "css-loader": "^0.26.1",
+    "db-migrate": "^0.10.0-beta.20",
+    "db-migrate-mysql": "^1.1.10",
     "file-loader": "^0.9.0",
     "koa": "^1.2.4",
     "koa-mysql": "^1.0.3",
