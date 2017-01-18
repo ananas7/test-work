@@ -1,9 +1,10 @@
-const serve = require('koa-static');
+const serve = require('koa-static-server');
 const koa = require('koa');
 const co = require('co');
 const mysql = require('koa-mysql');
 const websockify = require('koa-websocket');
 const route = require('koa-route');
+
 const app = websockify(koa());
 const config = require('./config');
 const db = mysql.createPool({
@@ -93,7 +94,8 @@ app.ws.use(route.all('/', function* (next) {
     yield next;
 }));
 
-app.use(serve('src/client/'));
+app.use(serve({rootDir: 'src/client/'}));
+app.use(serve({rootDir: 'src/client/', rootPath: '/department'}));
 
 app.listen(3000);
 

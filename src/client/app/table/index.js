@@ -8,6 +8,7 @@ class Table extends React.Component {
         this.state = {
             rows: [],
             name: '',
+            first: true,
             departmentId: '',
             alertClass: '',
             alertText: '',
@@ -22,13 +23,23 @@ class Table extends React.Component {
         this.updateModal = this.updateModal.bind(this);
         this.alertShow = this.alertShow.bind(this);
     }
-    componentDidMount() {
-        this.props.ws.onopen = (event) => {
+    componentDidUpdate() {
+        if (this.props.connect && this.state.first) {
             this.props.ws.send(JSON.stringify({
                 api: 'getList'
             }));
-        };
-
+            this.setState({first: false});
+        }
+    }
+    componentDidMount() {
+        try {
+            this.props.ws.send(JSON.stringify({
+                api: 'getList'
+            }));
+        }
+        catch(err) {
+            console.log(err);
+        }
         this.props.ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (!data.err) {
