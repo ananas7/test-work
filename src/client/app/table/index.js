@@ -1,4 +1,6 @@
 import React from 'react';
+import Modal from '../modal';
+const _ = require('lodash');
 
 class Table extends React.Component {
     constructor(props) {
@@ -9,11 +11,16 @@ class Table extends React.Component {
             departmentId: '',
             alertClass: '',
             alertText: '',
-            alertShow: false
+            alertShow: false,
+            updateName: '',
+            updateDepartmentId: '',
+            updateId: ''
         };
-        this.handleChangeName = this.handleChangeName.bind(this);
-        this.handleChangeDepartmentId = this.handleChangeDepartmentId.bind(this);
+        this.handleChange = this.handleChange.bind(this);
         this.add = this.add.bind(this);
+        this.update = this.update.bind(this);
+        this.updateModal = this.updateModal.bind(this);
+        this.alertShow = this.alertShow.bind(this);
     }
     componentDidMount() {
         this.props.ws.onopen = (event) => {
@@ -35,21 +42,14 @@ class Table extends React.Component {
                         break;
                     }
                     case 'update': {
+                        this.alertShow('alert-success', 'Success');
+                        this.props.ws.send(JSON.stringify({
+                            api: 'getList'
+                        }));
                         break;
                     }
                     case 'create': {
-                        this.setState({
-                            alertClass: 'alert-success',
-                            alertText: 'Success',
-                            alertShow: true
-                        });
-                        setTimeout(() => {
-                            this.setState({
-                                alertClass: '',
-                                alertText: '',
-                                alertShow: false
-                            });
-                        }, 2000);
+                        this.alertShow('alert-success', 'Success');
                         this.props.ws.send(JSON.stringify({
                             api: 'getList'
                         }));
@@ -59,29 +59,31 @@ class Table extends React.Component {
                         break;
                 }
             } else {
-                if (data.api == 'create') {
-                    this.setState({
-                        alertClass: 'alert-danger',
-                        alertText: 'Wrong',
-                        alertShow: true
-                    });
-                    setTimeout(() => {
-                        this.setState({
-                            alertClass: '',
-                            alertText: '',
-                            alertShow: false
-                        });
-                    }, 2000);
+                if (data.api == 'create' || data.api == 'update' ) {
+                    this.alertShow('alert-danger', 'Wrong');
                 }
                 console.log(data.err);
             }
         };
     }
-    handleChangeName(event) {
-        this.setState({name: event.target.value});
+    alertShow(className, text) {
+        this.setState({
+            alertClass: className,
+            alertText: text,
+            alertShow: true
+        });
+        setTimeout(() => {
+            this.setState({
+                alertClass: '',
+                alertText: '',
+                alertShow: false
+            });
+        }, 2000);
     }
-    handleChangeDepartmentId(event) {
-        this.setState({departmentId: event.target.value});
+    handleChange(event) {
+        let newState = _.clone(this.state);
+        newState[event.target.name] = event.target.value;
+        this.setState(newState);
     }
     add() {
         this.props.ws.send(JSON.stringify({
@@ -94,6 +96,26 @@ class Table extends React.Component {
             departmentId: ''
         });
     }
+    updateModal(data) {
+        this.setState({
+            updateName: data.name,
+            updateDepartmentId: data.department_id,
+            updateId: data.id
+        });
+    }
+    update() {
+        this.props.ws.send(JSON.stringify({
+            api: 'update',
+            name: this.state.updateName,
+            departmentId: this.state.updateDepartmentId,
+            id: this.state.updateId
+        }));
+        this.setState({
+            updateName: '',
+            updateDepartmentId: '',
+            updateId: ''
+        });
+    }
     render () {
         let rows;
         if (this.state.rows.length > 0) {
@@ -102,6 +124,7 @@ class Table extends React.Component {
                     <th>{e.id}</th>
                     <td>{e.department_id}</td>
                     <td>{e.name}</td>
+                    <td><button onClick={() => {this.updateModal(e)}} type="button" className="btn btn-primary" data-toggle="modal" data-target="#modalUpdate">Update</button></td>
                 </tr>);
         }
         return <div>
@@ -111,53 +134,38 @@ class Table extends React.Component {
                         <th>#</th>
                         <th>Department Id</th>
                         <th>Name</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>{rows}</tbody>
             </table>
             <button type="button" className="btn btn-primary" data-toggle="modal" data-target="#modalAdd">Add</button>
-            <div className="modal fade" id="modalAdd" tabIndex="-1" role="dialog" aria-labelledby="modalAddLabel" aria-hidden="true">
-                <div className="modal-dialog" role="document">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h5 className="modal-title" id="modalAddLabel">Add</h5>
-                            <button type="button" className="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div className="modal-body">
-                            <div className="row">
-                                <div className="col-sm-6">
-                                    <div className="form-group">
-                                        <input type="text" className="form-control" value={this.state.name} onChange={this.handleChangeName} placeholder="name" name="name" />
-                                    </div>
-                                </div>
-                                <div className="col-sm-6">
-                                    <div className="form-group">
-                                        <input type="text" className="form-control" value={this.state.departmentId} onChange={this.handleChangeDepartmentId} placeholder="departmentId" name="departmentId" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="modal-footer">
-                            <button type="button" className="btn btn-secondary" data-dismiss="modal">Close</button>
-                            <button onClick={this.add} type="button" className="btn btn-primary">Save changes</button>
-                            <div style={{
-                                paddingTop: '8px'
-                            }}>
-                                <div
-                                    style={{
-                                        display: (this.state.alertShow ? '' : 'none'),
-                                        textAlign: 'center'
-                                    }}
-                                    className={"alert " + this.state.alertClass}
-                                    role="alert"
-                                >{this.state.alertText}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <Modal
+                modalId="modalAdd"
+                h5="Add"
+                handleChange={this.handleChange}
+                name={this.state.name}
+                departmentId={this.state.departmentId}
+                inputName="name"
+                inputDepartmentId="departmentId"
+                alertShow={this.state.alertShow}
+                alertClass={this.state.alertClass}
+                alertText={this.state.alertText}
+                save={this.add}
+            />
+            <Modal
+                modalId="modalUpdate"
+                h5="Update"
+                handleChange={this.handleChange}
+                name={this.state.updateName}
+                departmentId={this.state.updateDepartmentId}
+                inputName="updateName"
+                inputDepartmentId="updateDepartmentId"
+                alertShow={this.state.alertShow}
+                alertClass={this.state.alertClass}
+                alertText={this.state.alertText}
+                save={this.update}
+            />
         </div>;
     }
 }

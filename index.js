@@ -1,6 +1,5 @@
 const serve = require('koa-static');
 const koa = require('koa');
-//const co = require("bluebird").coroutine;
 const co = require('co');
 const mysql = require('koa-mysql');
 const websockify = require('koa-websocket');
@@ -50,10 +49,9 @@ app.ws.use(route.all('/', function* (next) {
                 }));
             }
         },
-        // TODO create method api
         update: function* (ws, data) {
             try {
-                const res = yield db.query(`select * from department where id = ${data.id}`);
+                const res = yield db.query(`update department set department_id="${data.departmentId}", name="${data.name}" where id = ${data.id}`);
                 ws.send(JSON.stringify({
                     api: data.api,
                     data: res,
