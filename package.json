@@ -6,6 +6,7 @@
   "author": "Ilya Lomtev",
   "license": "MIT",
   "scripts": {
+    "start": "node index",
     "dev": "webpack -d --watch",
     "build": "webpack -p",
     "migrateUp": "node_modules/db-migrate/bin/db-migrate up 20170118165201-test",
